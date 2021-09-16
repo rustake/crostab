@@ -1,33 +1,53 @@
-pub struct Crostab<'a, T> {
-    head: Vec<&'a str>,
-    side: Vec<&'a str>,
+use veho::vector::index_of;
+
+pub struct Crostab<T> {
+    head: Vec<String>,
+    side: Vec<String>,
     rows: Vec<Vec<T>>,
 }
 
-impl<'a, T> Crostab<'a, T> {
-    pub fn build(head: Vec<&'a str>, side: Vec<&'a str>, rows: Vec<Vec<T>>) -> Crostab<'a, T> {
+impl<T> Crostab<T> {
+    pub fn build(head: Vec<String>, side: Vec<String>, rows: Vec<Vec<T>>) -> Crostab<T> {
         return Crostab { head, side, rows };
+    }
+    fn height(&self) -> usize { (&self.head).len() }
+    fn width(&self) -> usize { (&self.side).len() }
+    fn roin(&self, side: &str) -> Option<usize> { index_of(&self.side, &side.to_string()) }
+    fn coin(&self, head: &str) -> Option<usize> { index_of(&self.head, &head.to_string()) }
+    fn cell(&self, side: &str, head: &str) -> Option<&T> {
+        match (self.roin(side), self.coin(head)) {
+            (Some(xi), Some(yi)) => Some(&self.rows[xi][yi]),
+            _ => None,
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use spare::deco_matrix;
+    use veho::matrix::mapper as matrix_mapper;
+    use veho::vector::Mappers;
 
     use crate::crostab::Crostab;
 
     #[test]
-    fn test_fluo_matrix_rendered() {
-        let head = vec!["foo", "bar", "zen"];
-        let side = vec!["2000", "1980", "1960"];
-        let rows = vec![
+    fn test_crostab_simplified() {
+        let side = vec!["2004", "1984", "1964"].mapper(|x| x.to_string());
+        let head = vec!["foo", "bar", "zen"].mapper(|x| x.to_string());
+        let rows = matrix_mapper(vec![
             vec!["1", "2", "3"],
             vec!["1", "2", "3"],
             vec!["1", "2", "3"],
-        ];
+        ], |x| x.to_string());
         let crostab = Crostab::build(head, side, rows);
-        // crostab.rows.deco
-        let texted = deco_matrix(crostab.rows, ", ");
-        println!("rows = {}", texted);
+
+        let texted = deco_matrix(&(&crostab).rows, ", ");
+        println!("rows = {}", &texted);
+        println!("height = {}, width = {}", (&crostab).height(), (&crostab).width());
+        let side_label = "1984";
+        let head_label = "bar";
+        let cell = (&crostab).cell(side_label, head_label);
+
+        println!("cell = {}", cell.unwrap_or(&("NA".to_string())))
     }
 }
